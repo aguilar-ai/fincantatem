@@ -1,0 +1,6 @@
+from typing import Final
+
+INFERENCE_API_URL_ENV_VAR: Final[str] = "FI_API_URL"
+INFERENCE_API_KEY_ENV_VAR: Final[str] = "FI_API_KEY"
+INFERENCE_MODEL_ENV_VAR: Final[str] = "FI_MODEL"
+INFERENCE_PRESET_ENV_VAR: Final[str] = "FI_PRESET"
