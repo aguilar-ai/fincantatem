@@ -117,7 +117,8 @@ def finite(
                         chat_session, inference, env.read_env(preset=preset), interface
                     )
                 import sys
-                sys.excepthook = lambda *args, **kwargs: None # type: ignore
+
+                sys.excepthook = lambda *args, **kwargs: None  # type: ignore
                 raise e
 
         return wrapper

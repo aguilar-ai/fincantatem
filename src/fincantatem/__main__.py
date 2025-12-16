@@ -3,7 +3,12 @@ import traceback
 
 from .lib.ports import *
 from .lib.repl import repl_loop
-from .lib.theme import TRACEBACK_STYLE, ANALYSIS_STYLE, ACTION_HINT_RICH, ACTION_HINT_PLAIN
+from .lib.theme import (
+    TRACEBACK_STYLE,
+    ANALYSIS_STYLE,
+    ACTION_HINT_RICH,
+    ACTION_HINT_PLAIN,
+)
 from .domain.workflows import build_exception_context, build_prompt
 from .domain.constants import SYSTEM_PROMPT
 from .domain.aggs import Message

@@ -10,7 +10,7 @@ from .lib.ports import (
     DecoratorEnv,
     FileSystem,
     InferenceApi,
-    PlainTextInterface,
+    IPythonInterface,
     RichTextInterface,
 )
 
@@ -35,9 +35,9 @@ def load_ipython_extension(ipython: Any) -> None:
 
         fs = FileSystem()
         interface = (
-            RichTextInterface()
-            if RichTextInterface.is_available()
-            else PlainTextInterface()
+            IPythonInterface()
+            if IPythonInterface.is_available()
+            else RichTextInterface()
         )
         context = build_exception_context(
             err if isinstance(err, Exception) else Exception(str(err)), fs

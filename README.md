@@ -45,6 +45,7 @@ It integrates without ceremony: decorator, CLI, or IPython extension. Add it whe
     - [How It Works](#how-it-works)
     - [Important Caveats](#important-caveats)
   - [Alternative Mitigation Strategies](#alternative-mitigation-strategies)
+- [Performance Considerations](#performance-considerations)
 - [Requirements](#requirements)
 - [License](#license)
 - [Acknowledgements](#acknowledgements)
@@ -328,6 +329,15 @@ Cautious mode is a *best-effort* mechanism, not a guarantee. Users should unders
 1. **Local Inference** — Run a model locally via [Ollama](https://ollama.ai) or [vLLM](https://docs.vllm.ai), keeping all data on your machine
 2. **Private API** — Route requests through a trusted organizational endpoint with appropriate access controls and data handling policies
 3. **Selective Decoration** — Use `@finite` only on non-sensitive functions, or on functions unlikely to encounter data exposure
+
+## Performance Considerations
+
+We have not benchmarked FI meaningfully yet, but we can make a very reliable estimate of its performance characterstics at runtime. There are two performance profiles:
+
+| Case        | Performance Characteristics |
+|-------------|-----------------------------|
+| No exception | If the wrapped function does microseconds or more of work (I/O, JSON, allocations, network, DB, nontrivial Python logic), this overhead is usually negligible.<br><br>If the wrapped function is a tiny hot-loop primitive (simple arithmetic, attribute access) called millions of times, `@finite` can be a noticeable slowdown (often tens of percent or more) because the baseline call is already extremely small. |
+| Exception    | All of the characteristics of the no exception case, plus the additional overhead of the exception handling, analysis and LLM call. You're likely to notice a 2-3s delay in wind-down at exception time. |
 
 ## Key Features
 

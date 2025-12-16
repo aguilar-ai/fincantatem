@@ -1,5 +1,5 @@
 from .fs import FileSystem
-from .display import RichTextInterface, PlainTextInterface
+from .display import RichTextInterface, PlainTextInterface, IPythonInterface
 from .inference import InferenceApi
 from .chat import Chat
 from .cli_env import CLIEnv
@@ -9,6 +9,7 @@ __all__ = [
     "FileSystem",
     "RichTextInterface",
     "PlainTextInterface",
+    "IPythonInterface",
     "InferenceApi",
     "CLIEnv",
     "DecoratorEnv",
