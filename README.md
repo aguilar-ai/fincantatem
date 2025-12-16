@@ -76,6 +76,7 @@ For automatic redaction of secrets and PII:
 
 ```bash
 pip install "fincantatem[cautious]"
+python -m spacy download en_core_web_lg
 ```
 
 ## Usage
