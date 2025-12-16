@@ -153,7 +153,7 @@ Load as an extension to get automatic error analysis on cell failures:
 %load_ext fincantatem
 ```
 
-Every exception can be analyzed automatically without (onerous) modification to your code.
+Every exception can be analyzed automatically without (onerous) modification to your code. See the [example notebook](examples/05_data_science/main.ipynb) for more details.
 
 ## Examples
 

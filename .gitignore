@@ -16,3 +16,5 @@ wheels/
 .vscode
 .idea
 .cursor
+
+.DS_Store
