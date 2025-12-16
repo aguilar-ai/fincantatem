@@ -1,9 +1,9 @@
 ```
-▗▄▄▄▖    ▗▄▄▄▖▄▄▄▄  ▗▞▀▘▗▞▀▜▌▄▄▄▄     ■  ▗▞▀▜▌   ■  ▗▞▀▚▖▄▄▄▄  
-▐▌         █  █   █ ▝▚▄▖▝▚▄▟▌█   █ ▗▄▟▙▄▖▝▚▄▟▌▗▄▟▙▄▖▐▛▀▀▘█ █ █ 
-▐▛▀▀▘      █  █   █          █   █   ▐▌         ▐▌  ▝▚▄▄▖█   █ 
-▐▌       ▗▄█▄▖                       ▐▌         ▐▌             
-                                     ▐▌         ▐▌             
+▗▄▄▄▖    ▗▄▄▄▖▄▄▄▄  ▗▞▀▘▗▞▀▜▌▄▄▄▄     ■  ▗▞▀▜▌   ■  ▗▞▀▚▖▄▄▄▄
+▐▌         █  █   █ ▝▚▄▖▝▚▄▟▌█   █ ▗▄▟▙▄▖▝▚▄▟▌▗▄▟▙▄▖▐▛▀▀▘█ █ █
+▐▛▀▀▘      █  █   █          █   █   ▐▌         ▐▌  ▝▚▄▄▖█   █
+▐▌       ▗▄█▄▖                       ▐▌         ▐▌
+                                     ▐▌         ▐▌
 ```
 
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](https://github.com/aguilar-ai/fincantatem/blob/main/pyproject.toml)
@@ -23,7 +23,7 @@ It integrates without ceremony: decorator, CLI, or IPython extension. Add it whe
 ## Features
 
 ![F. Incantatem](images/header.png)
-*The tool displays a condensed traceback, identifies the root cause, and provides actionable fixes — all automatically. You can even chat with your exception.*
+_The tool displays a condensed traceback, identifies the root cause, and provides actionable fixes — all automatically. You can even chat with your exception._
 
 - **Contextual Analysis** — Examines stack traces, source code, and local variables to produce reasoned explanations
 - **Multiple Integration Points** — Use as a decorator, command-line tool, or IPython extension
@@ -37,6 +37,9 @@ It integrates without ceremony: decorator, CLI, or IPython extension. Add it whe
 - [Features](#features)
 - [Table of Contents](#table-of-contents)
 - [Installation](#installation)
+  - [Configuration](#configuration)
+    - [Environment Variables](#environment-variables)
+    - [Presets](#presets)
   - [Optional Features](#optional-features)
 - [Usage](#usage)
   - [As a Decorator](#as-a-decorator)
@@ -48,9 +51,6 @@ It integrates without ceremony: decorator, CLI, or IPython extension. Add it whe
   - [1. The "Silent API Change"](#1-the-silent-api-change)
   - [2. The "Mutable Default Argument" Trap](#2-the-mutable-default-argument-trap)
   - [3. The "Unicode Normalization Bomb"](#3-the-unicode-normalization-bomb)
-- [Configuration](#configuration)
-  - [Environment Variables](#environment-variables)
-  - [Presets](#presets)
 - [Data Risks](#data-risks)
   - [Cautious Mode](#cautious-mode)
     - [How It Works](#how-it-works)
@@ -78,6 +78,42 @@ Or with uv:
 
 ```bash
 uv add fincantatem
+```
+
+### Configuration
+
+When using the library as a decorator or as the IPython extension, you can configure the inference settings using environment variables. You can also provide them as arguments when using the command-line interface.
+
+#### Environment Variables
+
+| Variable     | Default                                         | Description                         |
+| ------------ | ----------------------------------------------- | ----------------------------------- |
+| `FI_PRESET`  | `openrouter`                                    | Preset name or custom identifier    |
+| `FI_API_KEY` | None                                            | API key for the inference service   |
+| `FI_URL`     | `https://openrouter.ai/api/v1/chat/completions` | OpenAI-compatible API endpoint      |
+| `FI_MODEL`   | `google/gemini-2.5-flash`                       | Model identifier (overrides preset) |
+
+#### Presets
+
+**OpenRouter** (default)
+
+```bash
+FI_API_KEY=sk_your_key python -m fincantatem script.py
+```
+
+**OpenAI**
+
+```bash
+FI_PRESET=openai FI_API_KEY=sk_your_key python -m fincantatem script.py
+```
+
+**Local Inference** (e.g., Ollama)
+
+```bash
+FI_PRESET=local \
+  FI_URL=http://localhost:11434/v1/chat/completions \
+  FI_MODEL=llama2 \
+  python -m fincantatem script.py
 ```
 
 ### Optional Features
@@ -158,6 +194,7 @@ Every exception can be analyzed automatically without (onerous) modification to 
 ## Examples
 
 ### 1. The "Silent API Change"
+
 **Scenario:** You are consuming a third-party API. The code has worked for months. Suddenly, it breaks with a `KeyError`, but the API status code is still 200.
 
 ```python
@@ -165,24 +202,26 @@ Every exception can be analyzed automatically without (onerous) modification to 
 def sync_user_data(user_id: str):
     response = requests.get(f"https://api.vendor.com/users/{user_id}")
     payload = response.json()
-    
+
     # CRASH: KeyError: 'active_subscription'
     if payload["data"]["active_subscription"]["status"] == "active":
         update_local_db(user_id)
 ```
 
-**Why this is hard:** Standard debugging requires you to add print statements to dump `payload`, rerun the script, and inspect the JSON structure. But here's the insidious part: *you might not be able to reproduce it* because the API behavior depends on the specific user_id, time of day, or rate limit state.
+**Why this is hard:** Standard debugging requires you to add print statements to dump `payload`, rerun the script, and inspect the JSON structure. But here's the insidious part: _you might not be able to reproduce it_ because the API behavior depends on the specific user_id, time of day, or rate limit state.
 
-**F. Incantatem Insight:** It captures the *actual response body* that caused the crash—no reproduction needed.
+**F. Incantatem Insight:** It captures the _actual response body_ that caused the crash—no reproduction needed.
 
 **The Explanation:**
-> "The code expects `payload['data']['active_subscription']['status']`. However, the actual `payload` captured during the crash contains `{'error': 'RateLimitExceeded', 'retry_after': 60, 'request_id': 'req_8x2k9'}`. 
+
+> "The code expects `payload['data']['active_subscription']['status']`. However, the actual `payload` captured during the crash contains `{'error': 'RateLimitExceeded', 'retry_after': 60, 'request_id': 'req_8x2k9'}`.
 >
 > The API vendor is returning application-level errors with HTTP 200 status codes—a common but poor API design pattern. Your code assumes `response.status_code == 200` means success, but you need defensive key checking or schema validation. The `request_id` in the payload suggests you can report this specific failure to their support."
 
 ---
 
 ### 2. The "Mutable Default Argument" Trap
+
 **Scenario:** A classic Python foot-gun that manifests as "data bleeding" between requests in a long-running process.
 
 ```python
@@ -195,24 +234,26 @@ def add_audit_log(event, _buffer=[]):  # The bug is here
     return False
 
 # Imagine this running in a server context
-add_audit_log("login") 
+add_audit_log("login")
 add_audit_log("logout")
 add_audit_log("view_page")  # Flushes
 add_audit_log("login_admin")  # CRASH or security leak
 ```
 
-**Why this is hard:** This is a *Heisenbug*—it disappears when you try to debug it with unit tests because each test starts fresh. The failure only emerges in production after the process has been running long enough. You might see symptoms like: duplicate database entries, security logs showing events from different users mixed together, or memory growing unbounded.
+**Why this is hard:** This is a _Heisenbug_—it disappears when you try to debug it with unit tests because each test starts fresh. The failure only emerges in production after the process has been running long enough. You might see symptoms like: duplicate database entries, security logs showing events from different users mixed together, or memory growing unbounded.
 
-**F. Incantatem Insight:** It shows you the *identity* of the buffer object and its complete contents at crash time.
+**F. Incantatem Insight:** It shows you the _identity_ of the buffer object and its complete contents at crash time.
 
 **The Explanation:**
-> "The local variable _buffer contains ['login', 'logout', 'view_page', 'login_admin']—4 items when you expected 1.
+
+> "The local variable \_buffer contains ['login', 'logout', 'view_page', 'login_admin']—4 items when you expected 1.
 >
-> This is the mutable default argument trap. Your function signature is def add_audit_log(event, _buffer=[]). The list contains events from previous function calls because Python evaluates default arguments once at definition time, then reuses the same object. You can verify this yourself by adding print(id(_buffer)) at the start of the function—you'll see the same memory address across calls. In this case, the presence of 4 accumulated items instead of 1 is the smoking gun."
+> This is the mutable default argument trap. Your function signature is def add_audit_log(event, \_buffer=[]). The list contains events from previous function calls because Python evaluates default arguments once at definition time, then reuses the same object. You can verify this yourself by adding print(id(\_buffer)) at the start of the function—you'll see the same memory address across calls. In this case, the presence of 4 accumulated items instead of 1 is the smoking gun."
 
 ---
 
 ### 3. The "Unicode Normalization Bomb"
+
 **Scenario:** A web application that's been running fine suddenly starts having bizarre duplicate key violations in your database, but only for certain users with international names.
 
 ```python
@@ -229,7 +270,8 @@ def create_user(username: str, email: str):
 **F. Incantatem Insight:** It shows you the actual byte representation of the `username` variable.
 
 **The Explanation:**
-> "The variable `username` contains the string `'José'` which appears as `'Jos\\u00e9'` (5 characters, with a single codepoint é). However, your database already contains a user with username `'Jose\\u0301'` (5 characters, with e + combining acute accent). 
+
+> "The variable `username` contains the string `'José'` which appears as `'Jos\\u00e9'` (5 characters, with a single codepoint é). However, your database already contains a user with username `'Jose\\u0301'` (5 characters, with e + combining acute accent).
 >
 > These are two different Unicode representations of the same visual character—NFC (composed) vs. NFD (decomposed) normalization. Your form input is receiving NFD-normalized text (common on macOS), while your database contains NFC (common on Windows/Linux). Python's `User.objects.filter(username=username)` doesn't find a match because you're comparing different byte sequences. **The fix:** Apply `unicodedata.normalize('NFC', username)` before any database operation. This affects approximately 2,184 Unicode characters with multiple representations."
 
@@ -254,37 +296,6 @@ Or with uv:
 ```bash
 uv add "fincantatem[pretty]"
 uv add "fincantatem[cautious]"
-```
-
-## Configuration
-
-### Environment Variables
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `FI_PRESET` | `openrouter` | Preset name or custom identifier |
-| `FI_API_KEY` | None | API key for the inference service |
-| `FI_URL` | `https://openrouter.ai/api/v1/chat/completions` | OpenAI-compatible API endpoint |
-| `FI_MODEL` | `google/gemini-2.5-flash` | Model identifier (overrides preset) |
-
-### Presets
-
-**OpenRouter** (default)
-```bash
-FI_API_KEY=sk_your_key python -m fincantatem script.py
-```
-
-**OpenAI**
-```bash
-FI_PRESET=openai FI_API_KEY=sk_your_key python -m fincantatem script.py
-```
-
-**Local Inference** (e.g., Ollama)
-```bash
-FI_PRESET=local \
-  FI_URL=http://localhost:11434/v1/chat/completions \
-  FI_MODEL=llama2 \
-  python -m fincantatem script.py
 ```
 
 ## Data Risks
@@ -325,7 +336,7 @@ Cautious mode employs two complementary detection mechanisms:
 
 #### Important Caveats
 
-Cautious mode is a *best-effort* mechanism, not a guarantee. Users should understand its limitations:
+Cautious mode is a _best-effort_ mechanism, not a guarantee. Users should understand its limitations:
 
 - **Incompleteness** — Detection patterns may miss secrets in unusual formats or custom PII that doesn't match known patterns. A secret hidden in a comment, a name disguised as a variable, or a partially exposed credential may slip through.
 
@@ -349,10 +360,10 @@ Cautious mode is a *best-effort* mechanism, not a guarantee. Users should unders
 
 We have not benchmarked FI meaningfully yet, but we can make a very reliable estimate of its performance characterstics at runtime. There are two performance profiles:
 
-| Case        | Performance Characteristics |
-|-------------|-----------------------------|
+| Case         | Performance Characteristics                                                                                                                                                                                                                                                                                                                                                                                             |
+| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | No exception | If the wrapped function does microseconds or more of work (I/O, JSON, allocations, network, DB, nontrivial Python logic), this overhead is usually negligible.<br><br>If the wrapped function is a tiny hot-loop primitive (simple arithmetic, attribute access) called millions of times, `@finite` can be a noticeable slowdown (often tens of percent or more) because the baseline call is already extremely small. |
-| Exception    | All of the characteristics of the no exception case, plus the additional overhead of the exception handling, analysis and LLM call. You're likely to notice a 2-3s delay in wind-down at exception time. |
+| Exception    | All of the characteristics of the no exception case, plus the additional overhead of the exception handling, analysis and LLM call. You're likely to notice a 2-3s delay in wind-down at exception time.                                                                                                                                                                                                                |
 
 ## Key Features
 
@@ -409,25 +420,30 @@ Apache License 2.0
 Planned features and improvements:
 
 - **Richer Context Collection:**
+
   - Analyze type annotations and compare them to runtime values for better error diagnosis.
   - Capture dependency versions used in the traceback for context on API or environment issues.
 
 - **Smarter Code Analysis:**
+
   - Use AST to retrieve full function/class definitions and key imports.
   - Summarize data and control flow to pinpoint where and how values led to the crash.
   - Show related code, assignments, and similar patterns across the codebase.
 
 - **External Knowledge Integration:**
+
   - Fetch documentation for involved exceptions/functions.
   - Suggest relevant GitHub issues or Stack Overflow threads.
   - Check changelogs for breaking changes in third-party libraries.
 
 - **Enhanced Output:**
+
   - Include severity and impact ratings.
   - Offer ready-to-apply code patches.
   - Generate suggested test cases.
 
 - **Context-Aware Features:**
+
   - Detect common frameworks (Django, FastAPI, Pytest, etc.) and display specialized context.
   - Optionally surface recent git history and CI/environment info.
 
