@@ -80,3 +80,10 @@ Secret = NewType("Secret", str)
 
 # Redacted secret
 RedactedSecret = NewType("RedactedSecret", str)
+
+
+# ------------------------------ Framework ------------------------------
+
+FrameworkName = NewType("FrameworkName", str)
+
+Documentation = NewType("Documentation", str)
