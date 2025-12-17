@@ -1,6 +1,6 @@
 [project]
 name = "fincantatem"
-version = "0.2.3"
+version = "0.3.3"
 description = "Decorator, CLI & IPython extension for LLM-powered exception handling."
 readme = "README.md"
 license = { text = "Apache-2.0" }
