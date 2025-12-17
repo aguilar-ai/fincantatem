@@ -1,19 +1,24 @@
-from ...domain.values import Response, Prompt
-from ...domain.aggs import Message, ExceptionContext
+import json
+from dataclasses import asdict, dataclass, field
+from datetime import datetime, timezone
+from enum import Enum
+from importlib.util import find_spec
+from typing import List, Optional
+
+from ...domain.aggs import ExceptionContext, Message
 from ...domain.constants import SYSTEM_PROMPT
 from ...domain.ports import Chat as DomainChat
 from ...domain.ports import Interface
+from ...domain.values import Prompt, Response
+from ...lib.constants import CHAT_EXPORT_JSON_VERSION
+from ...lib.utils import pipe
 from ..theme import (
-    USER_PROMPT_STYLE,
     CHAT_HELP_STYLE,
     CHAT_HELP_TEXT,
     CHAT_HELP_TEXT_PLAIN,
     CHAT_INFO_STYLE,
+    USER_PROMPT_STYLE,
 )
-from typing import Optional, List, Any
-from enum import Enum
-import json
-from datetime import datetime, timezone
 
 
 class ChatCommand(Enum):
@@ -39,6 +44,23 @@ def _parse_command(text: str) -> Optional[ChatCommand]:
     return None
 
 
+@dataclass
+class ChatExportData:
+    @dataclass
+    class Exception:
+        type: str
+        message: str
+
+    timestamp: int = field(
+        default_factory=lambda: int(datetime.now(timezone.utc).timestamp())
+    )
+    version: str = field(default=CHAT_EXPORT_JSON_VERSION)
+    python_version: Optional[str] = None
+
+    exception: Optional[Exception] = None
+    messages: List[Message[Prompt | Response]] = field(default_factory=list)
+
+
 class Chat(DomainChat):
     def __init__(
         self,
@@ -48,55 +70,48 @@ class Chat(DomainChat):
         exception_context: Optional[ExceptionContext] = None,
     ):
         self.interface = interface
-        self.exception_context = exception_context
+        self.exception_context: ExceptionContext | None = exception_context
         self.messages: List[Message[Prompt | Response]] = [
             Message(role="system", content=SYSTEM_PROMPT),
             Message(role="user", content=initial_prompt),
             Message(role="assistant", content=analysis),
         ]
 
-    # NOTE: LLM-written code
     def _handle_help(self, interface: Interface) -> None:
         """Display help message."""
-        # Check if we have Rich available
-        try:
-            from rich.console import Console  # type: ignore
-
+        if find_spec("rich.console.Console") is not None:
             interface.display(CHAT_HELP_TEXT, **CHAT_HELP_STYLE)
-        except ImportError:
+        else:
             interface.display(CHAT_HELP_TEXT_PLAIN)
 
-    # NOTE: LLM-written code
     def _handle_save(self, interface: Interface) -> Optional[str]:
         """Save chat history as JSON and return the filename."""
-        timestamp = datetime.now(timezone.utc).isoformat()
-        safe_timestamp = timestamp.replace(":", "-").replace("+", "_")
-        filename = f"fincantatem_chat_{safe_timestamp}.json"
+        timestamp, filename = pipe(
+            datetime.now(timezone.utc),
+            lambda dt: (
+                dt.isoformat(),
+                f"fincantatem_chat_{dt.strftime('%Y-%m-%d_%H-%M')}.json",
+            ),
+        )
 
-        # Build the export structure
-        export_data: dict[str, Any] = {
-            "timestamp": timestamp,
-            "version": "1.0",
-        }
+        export_data = ChatExportData()
 
-        # Add exception context if available
         if self.exception_context:
-            export_data["exception"] = {
-                "type": str(self.exception_context.exception_type_name),
-                "message": str(self.exception_context.exception_message),
-                "python_version": str(self.exception_context.python_version),
-            }
+            export_data.python_version = self.exception_context.python_version
+            export_data.exception = ChatExportData.Exception(
+                type=str(self.exception_context.exception_type_name),
+                message=str(self.exception_context.exception_message),
+            )
 
-        # Add messages (skip system prompt for cleaner export)
-        export_data["messages"] = [
-            {"role": str(msg.role), "content": str(msg.content)}
+        export_data.messages = [
+            Message(role=msg.role, content=msg.content)
             for msg in self.messages
-            if str(msg.role) != "system"
+            if msg.role != "system"
         ]
 
         try:
             with open(filename, "w", encoding="utf-8") as f:
-                json.dump(export_data, f, indent=2, ensure_ascii=False)
+                json.dump(asdict(export_data), f, indent=2, ensure_ascii=False)
 
             interface.display(
                 f"  ✧ Chat saved to: {filename}",
@@ -121,15 +136,12 @@ class Chat(DomainChat):
 
             if command == ChatCommand.HELP:
                 self._handle_help(interface)
-                # Recursively ask for next input
                 return self.ask_user(interface)
 
             if command == ChatCommand.SAVE:
                 self._handle_save(interface)
-                # Recursively ask for next input
                 return self.ask_user(interface)
 
-            # Unknown command
             interface.display(
                 f"  ! Unknown command: {prompt}. Type /help for available commands.",
                 **CHAT_INFO_STYLE,

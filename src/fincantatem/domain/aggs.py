@@ -1,9 +1,39 @@
-# pyright: strict
-
-from .values import *
-from .constants import INFERENCE_PRESETS
-from typing import Optional, List, Dict, Any, TypeVar
 from dataclasses import dataclass
+from typing import Any, Dict, Generic, List, Optional, Protocol, Sequence, TypeVar
+
+from .constants import INFERENCE_PRESETS
+from .values import (
+    ApiKey,
+    ArrayDtype,
+    ArrayShape,
+    Cause,
+    Context,
+    DeviceName,
+    ExceptionAttributes,
+    ExceptionMessage,
+    ExceptionTypeName,
+    FnName,
+    FrameworkName,
+    InferenceApiIdentifier,
+    InferenceApiUrl,
+    LineNumberOffset,
+    ModelId,
+    PresetIdentifier,
+    PythonVersion,
+    Role,
+    SourceCode,
+    SourceCodePath,
+    SourceCodeSnippet,
+    Traceback,
+    TransformationType,
+)
+
+
+class StringableContext(Protocol):
+    def frame_context_string(self, index: int) -> Optional[str]: ...
+
+
+S = TypeVar("S", covariant=True, bound=StringableContext)
 
 # ------------------------------ Inference ------------------------------
 
@@ -11,7 +41,7 @@ T = TypeVar("T")
 
 
 @dataclass
-class Message[T]:
+class Message(Generic[T]):
     role: Role
     content: T
 
@@ -82,6 +112,7 @@ class ExceptionContext:
     context: Optional[Context]
     immediate_source_code_bundle: SourceCodeBundle
     source_code_bundles: List[SourceCodeBundle]
+    framework_context: List[StringableContext]
 
 
 # ------------------------------ CLI & Decorator ------------------------------
@@ -91,7 +122,37 @@ class ExceptionContext:
 class Invocation:
     filename: Optional[str]
     preset: PresetIdentifier
-    snippets: bool
+    full_source: bool
     locals: bool
     chat: bool = False
     cautious: bool = False
+
+
+# ------------------------------ Framework ------------------------------
+
+
+@dataclass(frozen=True)
+class ArrayMetadata:
+    """Framework-agnostic array metadata"""
+
+    name: str
+    shape: ArrayShape
+    dtype: ArrayDtype
+    device: DeviceName
+
+
+@dataclass(frozen=True)
+class FrameContext:
+    """Framework-agnostic per-frame context"""
+
+    arrays: Sequence[ArrayMetadata]
+    transformation_context: Optional[TransformationType]
+
+
+@dataclass(frozen=True)
+class FrameworkContext:
+    """Base framework context"""
+
+    name: FrameworkName
+    version: str
+    frame_contexts: Sequence[FrameContext]

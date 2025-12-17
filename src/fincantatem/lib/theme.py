@@ -1,4 +1,5 @@
 from typing import Final
+
 from .ports.display import DisplaySettings
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -7,9 +8,7 @@ from .ports.display import DisplaySettings
 # ═══════════════════════════════════════════════════════════════════════════════
 
 # ASCII Art Headers
-SPELL_HEADER_RICH: Final[
-    str
-] = r"""
+SPELL_HEADER_RICH: Final[str] = r"""
 ▗▄▄▄▖    ▗▄▄▄▖▄▄▄▄  ▗▞▀▘▗▞▀▜▌▄▄▄▄     ■  ▗▞▀▜▌   ■  ▗▞▀▚▖▄▄▄▄  
 ▐▌         █  █   █ ▝▚▄▖▝▚▄▟▌█   █ ▗▄▟▙▄▖▝▚▄▟▌▗▄▟▙▄▖▐▛▀▀▘█ █ █ 
 ▐▛▀▀▘      █  █   █          █   █   ▐▌         ▐▌  ▝▚▄▄▖█   █ 
@@ -17,14 +16,8 @@ SPELL_HEADER_RICH: Final[
                                      ▐▌         ▐▌             
 """
 
-SPELL_HEADER_PLAIN: Final[
-    str
-] = r"""
-▗▄▄▄▖    ▗▄▄▄▖▄▄▄▄  ▗▞▀▘▗▞▀▜▌▄▄▄▄     ■  ▗▞▀▜▌   ■  ▗▞▀▚▖▄▄▄▄  
-▐▌         █  █   █ ▝▚▄▖▝▚▄▟▌█   █ ▗▄▟▙▄▖▝▚▄▟▌▗▄▟▙▄▖▐▛▀▀▘█ █ █ 
-▐▛▀▀▘      █  █   █          █   █   ▐▌         ▐▌  ▝▚▄▄▖█   █ 
-▐▌       ▗▄█▄▖                       ▐▌         ▐▌             
-                                     ▐▌         ▐▌             
+SPELL_HEADER_PLAIN: Final[str] = r"""
+    - F. Incantatem -
 """
 
 
@@ -53,9 +46,7 @@ class PlainMarkers:
 
 
 # Chat command help text
-CHAT_HELP_TEXT: Final[
-    str
-] = """
+CHAT_HELP_TEXT: Final[str] = """
   ✧ Available Commands:
     /help  - Show this help message
     /save  - Save chat history as JSON
@@ -64,9 +55,7 @@ CHAT_HELP_TEXT: Final[
   Or just type your follow-up question.
 """
 
-CHAT_HELP_TEXT_PLAIN: Final[
-    str
-] = """
+CHAT_HELP_TEXT_PLAIN: Final[str] = """
   Available Commands:
     /help  - Show this help message
     /save  - Save chat history as JSON

@@ -1,16 +1,14 @@
-# pyright: strict
-
-from ...domain.values import SourceCode, LineNumberOffset, Secret, RedactedSecret
-from ...lib.utils import pipe
-from .types import SecretFinding
-
-from detect_secrets.core.secrets_collection import SecretsCollection
-from detect_secrets.settings import default_settings
-from bip_utils import Bip39Languages, Bip39MnemonicGenerator  # pyright: ignore
-
+import hashlib
 import tempfile
 from typing import List
-import hashlib
+
+from bip_utils import Bip39Languages, Bip39MnemonicGenerator  # pyright: ignore
+from detect_secrets.core.secrets_collection import SecretsCollection
+from detect_secrets.settings import default_settings
+
+from ...domain.values import LineNumberOffset, RedactedSecret, Secret, SourceCode
+from ...lib.utils import pipe
+from .types import SecretFinding
 
 
 def redaction_policy(secret: Secret) -> RedactedSecret:

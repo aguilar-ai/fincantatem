@@ -1,10 +1,10 @@
-# pyright: strict
-
 import argparse
+import os
 from typing import Optional, cast
 
+from ...domain.aggs import InferenceSettings, Invocation
+from ...domain.constants import INFERENCE_PRESETS
 from ...domain.ports import CLIEnv as DomainCLIEnv
-from ...domain.aggs import Invocation, InferenceSettings
 from ...domain.values import (
     ApiKey,
     InferenceApiIdentifier,
@@ -12,10 +12,13 @@ from ...domain.values import (
     ModelId,
     PresetIdentifier,
 )
-from ...domain.constants import INFERENCE_PRESETS
+from ...lib.constants import (
+    INFERENCE_API_KEY_ENV_VAR,
+    INFERENCE_API_URL_ENV_VAR,
+    INFERENCE_MODEL_ENV_VAR,
+    INFERENCE_PRESET_ENV_VAR,
+)
 from ...lib.utils import pipe
-from ...lib.constants import *
-import os
 
 
 class CLIEnv(DomainCLIEnv):
@@ -39,31 +42,31 @@ class CLIEnv(DomainCLIEnv):
             help="The preset to use for the inference API.",
         )
         parser.add_argument(
-            "-s",
-            "--snippets",
-            type=bool,
+            "-f",
+            "--full-source",
+            action="store_true",
             default=True,
-            help="Whether to include snippets of your code in the prompt or the full source code.",
+            help="Include the full source code of relevant frames in the prompt, as opposed to snippets.",
         )
         parser.add_argument(
             "-l",
-            "--locals",
-            type=bool,
-            default=False,
-            help="Whether to include the local variables in the prompt.",
+            "--no-locals",
+            dest="locals",
+            action="store_false",
+            help="Do not include the local variables in the prompt.",
         )
+        parser.set_defaults(locals=True)
         parser.add_argument(
             "-c",
             "--cautious",
-            type=bool,
-            default=False,
+            action="store_true",
             help="Enable cautious mode to attempt redacting secrets and PII from the prompt.",
         )
         args = parser.parse_args()
         return Invocation(
             filename=args.filename,
             preset=args.preset,
-            snippets=args.snippets,
+            full_source=args.full_source,
             locals=args.locals,
             cautious=args.cautious,
         )
@@ -76,7 +79,7 @@ class CLIEnv(DomainCLIEnv):
                 INFERENCE_MODEL_ENV_VAR,
                 INFERENCE_PRESET_ENV_VAR,
             ],
-            lambda env_vars: map(lambda env_var: os.getenv(env_var), env_vars),
+            lambda env_vars: [os.getenv(env_var) for env_var in env_vars],
             tuple,
         )
 

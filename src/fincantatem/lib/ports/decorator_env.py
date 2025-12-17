@@ -1,7 +1,9 @@
-# pyright: strict
+import os
+from typing import Optional, TypedDict, Unpack, cast
 
+from ...domain.aggs import InferenceSettings, Invocation
+from ...domain.constants import INFERENCE_PRESETS
 from ...domain.ports import DecoratorEnv as DomainDecoratorEnv
-from ...domain.aggs import Invocation, InferenceSettings
 from ...domain.values import (
     ApiKey,
     InferenceApiIdentifier,
@@ -9,11 +11,13 @@ from ...domain.values import (
     ModelId,
     PresetIdentifier,
 )
-from ...domain.constants import INFERENCE_PRESETS
-from typing import TypedDict, Optional, Unpack, cast
+from ...lib.constants import (
+    INFERENCE_API_KEY_ENV_VAR,
+    INFERENCE_API_URL_ENV_VAR,
+    INFERENCE_MODEL_ENV_VAR,
+    INFERENCE_PRESET_ENV_VAR,
+)
 from ...lib.utils import pipe
-from ...lib.constants import *
-import os
 
 Kwargs = TypedDict(
     "Kwargs",
@@ -29,8 +33,8 @@ Kwargs = TypedDict(
 class DecoratorEnv(DomainDecoratorEnv):
     def read_args(self, **kwargs: Unpack[Kwargs]) -> Invocation:
         # Priority 1: Command-line arguments
-        filename_cli, preset_cli, snippets_cli, locals_cli, cautious_cli = pipe(
-            ["filename", "preset", "snippets", "locals", "cautious"],
+        filename_cli, preset_cli, full_source_cli, locals_cli, cautious_cli = pipe(
+            ["filename", "preset", "full_source", "locals", "cautious"],
             lambda kw: map(lambda k: kwargs.get(k), kw),
             tuple,
         )
@@ -38,7 +42,7 @@ class DecoratorEnv(DomainDecoratorEnv):
         return Invocation(
             filename=filename_cli,
             preset=preset_cli,
-            snippets=snippets_cli,
+            full_source=full_source_cli,
             locals=locals_cli,
             cautious=cautious_cli,
         )

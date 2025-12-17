@@ -1,3 +1,7 @@
+import inspect
+import linecache
+from typing import Any
+
 from ...domain.errors import RedactionFailedError
 from ...domain.ports import FileSystem as DomainFileSystem
 from ...domain.values import (
@@ -9,8 +13,8 @@ from ...domain.values import (
 
 
 def _redaction_routine(source_code: SourceCode) -> SourceCode:
-    from ...lib.cautious.secrets import scan_secrets, strip_secrets
     from ...lib.cautious.pii import strip_pii
+    from ...lib.cautious.secrets import scan_secrets, strip_secrets
 
     secrets = scan_secrets(source_code)
     source_code = strip_secrets(source_code, secrets)
@@ -33,7 +37,6 @@ class FileSystem(DomainFileSystem):
             pass
 
         # Strategy 2: linecache (works for some non-filesystem sources too)
-        import linecache
 
         cached_lines = linecache.getlines(path_str)
         if cached_lines:
@@ -70,8 +73,6 @@ class FileSystem(DomainFileSystem):
 
         # Strategy 2: linecache fallback
         if not lines:
-            import linecache
-
             lines = linecache.getlines(path_str)
 
         if not lines:
@@ -91,11 +92,9 @@ class FileSystem(DomainFileSystem):
         return SourceCodeSnippet("".join(lines[start:end]))
 
     def fetch_source_code_from_frame(
-        self, frame: object
+        self, frame: Any
     ) -> tuple[SourceCode, LineNumberOffset]:
-        import inspect
-
-        source_lines, start_line = inspect.getsourcelines(frame)  # type: ignore
+        source_lines, start_line = inspect.getsourcelines(frame)
         if self.cautious:
             try:
                 source_code = SourceCode("".join(source_lines))
@@ -106,10 +105,8 @@ class FileSystem(DomainFileSystem):
                 ) from e
         return SourceCode("".join(source_lines)), LineNumberOffset(start_line)
 
-    def fetch_source_code_snippet_from_frame(self, frame: object) -> SourceCodeSnippet:
-        import inspect
-
-        source_lines, _ = inspect.getsourcelines(frame)  # type: ignore
+    def fetch_source_code_snippet_from_frame(self, frame: Any) -> SourceCodeSnippet:
+        source_lines, _ = inspect.getsourcelines(frame)
         if self.cautious:
             try:
                 source_code = SourceCode("".join(source_lines))

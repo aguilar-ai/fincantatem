@@ -1,14 +1,11 @@
-from typing import List, Protocol, TypeVar, runtime_checkable, Optional
-from .values import *
-from .aggs import SourceCodeBundle
+from typing import Optional, Protocol, Sequence, runtime_checkable
 
-T = TypeVar("T", covariant=True)
+from .aggs import S, SourceCodeBundle
+from .values import FrameworkName
 
 
 @runtime_checkable
-class Framework(Protocol[T]):
-    def __init__(self, imports: List[FrameworkName]): ...
-
+class Framework(Protocol[S]):
     @property
     def name(self) -> FrameworkName: ...
 
@@ -16,5 +13,5 @@ class Framework(Protocol[T]):
     def detect() -> bool: ...
 
     def extract_context(
-        self, source_code_bundles: List[SourceCodeBundle]
-    ) -> Optional[T]: ...
+        self, source_code_bundles: Sequence[SourceCodeBundle]
+    ) -> Optional[S]: ...

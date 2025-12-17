@@ -1,7 +1,8 @@
-from fincantatem import finite
-from typing import List
-from time import sleep
 import random
+from time import sleep
+from typing import List
+
+from fincantatem import finite
 
 
 def flush_to_stdout(buffer: List[str]):
@@ -10,7 +11,7 @@ def flush_to_stdout(buffer: List[str]):
     print("Events reported: ", "\n".join(buffer))
 
 
-def add_event_log(event: str, _buffer: List[str] = []): # type: ignore
+def add_event_log(event: str, _buffer: List[str] = []):
     _buffer.append(event)
     if len(_buffer) >= 3:
         flush_to_stdout(_buffer)

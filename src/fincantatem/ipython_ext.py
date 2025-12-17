@@ -4,8 +4,9 @@ from __future__ import annotations
 
 from typing import Any, Callable, Optional
 
-from .domain.workflows import build_exception_context, build_prompt
 from .domain.values import PresetIdentifier
+from .domain.workflows import build_exception_context, build_prompt
+from .lib.framework.jax import JaxFramework
 from .lib.ports import (
     DecoratorEnv,
     FileSystem,
@@ -39,12 +40,12 @@ def load_ipython_extension(ipython: Any) -> None:
             if IPythonInterface.is_available()
             else RichTextInterface()
         )
+        frameworks = [JaxFramework()]
         context = build_exception_context(
-            err if isinstance(err, Exception) else Exception(str(err)), fs
+            err if isinstance(err, Exception) else Exception(str(err)), fs, frameworks
         )
         env = DecoratorEnv()
         inference = InferenceApi()
-
         preset: PresetIdentifier = "openrouter"
         prompt = build_prompt(context, "default", snippets=True)
         response = inference.call(env.read_env(preset=preset), prompt)
